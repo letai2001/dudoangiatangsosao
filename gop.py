@@ -1,7 +1,7 @@
 import pandas as pd
 # Load data from CSV files
-df1 = pd.read_csv('merged_all_local.csv')
-df2 = pd.read_csv('merged_all.csv')
+df1 = pd.read_csv('all_item_balo_2_600.csv')
+df2 = pd.read_csv('all_item_balo_602_1200.csv')
 # df3 = pd.read_csv('all_item_diengiadung_301_600.csv')
 # df4 = pd.read_csv('all_item_diengiadung_600_850.csv')
 # Concatenate dataframes vertically
@@ -11,6 +11,6 @@ df_concat.index += 1
 
 
 # Save concatenated dataframe to a new CSV file
-# df_concat = df_concat.drop('Unnamed: 0', axis=1)
+df_concat = df_concat.drop('Unnamed: 0', axis=1)
 
-df_concat.to_csv('merged_all_in.csv', index_label='id')
+df_concat.to_csv('merged_all_balo.csv', index_label='id')

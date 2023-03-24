@@ -15,21 +15,24 @@ chrome_options.add_argument(f'user-agent={user_agent}')
 
 driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
 # Open URL
-driver.get("https://tiki.vn/balo-va-vali/c6000")
+
+# def get_links():
+
+    # Mở trang web Tiki
+driver.get("https://tiki.vn/")
 sleep(random.randint(2,4))
-links = []
-prices = []
-for i in range(2, 49):
-    # Truy cập trang Tiki có chỉ số i
-    driver.get('https://tiki.vn/balo-va-vali/c6000?page=' + str(i))
-    sleep(random.randint(1,3))
-    elems = driver.find_elements(By.CLASS_NAME , "product-item")
-    for elem in elems: 
-        link  = elem.get_attribute('href')
-        links.append(link)         
-    # elems_prices = driver.find_elements(By.CSS_SELECTOR , ".price-discount__price")
-    # for elem_price in elems_prices:
-    #     price = elem_price.text
-    #     prices.append(elem_price)
-df1 = pd.DataFrame({'link_item': links} )
-df1.to_csv('product_link_balo.csv', index=True)
+
+    # Tìm tất cả các đối tượng chứa link đến trang sản phẩm
+title_elements = driver.find_elements(By.CLASS_NAME, 'styles__StyledItem-sc-oho8ay-0.bzmzGe')
+link_elements = title_elements[8:]
+
+    # Lưu trữ các liên kết vào danh sách
+links = [link.get_attribute("href") for link in link_elements]
+links = links[:-1]
+df1 = pd.DataFrame({'link_category': links} )
+df1.to_csv('link.csv', index=True)
+
+    # Đóng trình duyệt
+
+    # Trả về danh sách liên kết
+# return links

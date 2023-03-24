@@ -19,9 +19,9 @@ from queue import Queue
 
 
 
-df_link = pd.read_csv('product_link_giaydepnam.csv')
+df_link = pd.read_csv('product_link_balo.csv')
 p1_link = df_link['link_item'].to_list()
-p_link = p1_link[402:1000]
+p_link = p1_link[602:1200]
 chrome_options = Options()
 chrome_options.add_argument('--no-sandbox')
 user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
@@ -216,4 +216,4 @@ print(len(ratting_point_list))
 
 df1 = pd.DataFrame({ 'price': prices_list , 'discount': discount_list , 'review_count': reivew_counts_list , 'quantity_sold': quantity_sold_list , 'rate_shop': rate_shop_list , 'shop_follow' : shop_follow_list , 'count_code' : count_code_discount_list , 'rating_avarage' : ratting_point_list} )
 
-df1.to_csv('all_item_giaydepnam_402_1000.csv', index=True)
+df1.to_csv('all_item_balo_602_1200.csv', index=True)
