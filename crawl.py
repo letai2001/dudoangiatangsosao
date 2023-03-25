@@ -25,7 +25,7 @@ scraper = TikiScraper()
 links = scraper.get_links()
 
 link_item = []
-
+MAX_RETRIES = 5
 def scrape_page(links):
     driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
 
@@ -34,13 +34,26 @@ def scrape_page(links):
                 # Truy cập trang Tiki có chỉ số i
                     driver.get(link + '?page='+ str(i))
                     sleep(random.randint(1,3))
-                    elems = driver.find_elements(By.CLASS_NAME , "product-item")
+                    
+                    for i in range(MAX_RETRIES):
+                    
+                        try:
+                            elems = driver.find_elements(By.CLASS_NAME , "product-item")
+                            break
+                        except NoSuchElementException:
+                            print(f"Element not found, retrying ({i+1}/{MAX_RETRIES})...")
+                            sleep(1)
+
+                    
                     for elem in elems:
-                        try: 
-                            link2  = elem.get_attribute('href')
-                            link_item.append(link2)
-                        except:
-                            print("khong thay element!")
+                        for i in range(MAX_RETRIES):
+                            try: 
+                                link2  = elem.get_attribute('href')
+                                link_item.append(link2)
+                                break
+                            except:
+                                print("khong thay href!")
+                                sleep(1)
                            
         # elems_prices = driver.find_elements(By.CSS_SELECTOR , ".price-discount__price")
         # for elem_price in elems_prices:
@@ -66,4 +79,4 @@ for t in threads:
     t.join()
 
 df1 = pd.DataFrame({'link_item': link_item} )
-df1.to_csv('product_link_.csv', index=True)
+df1.to_csv('product_link.csv', index=True)
