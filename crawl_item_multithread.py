@@ -15,13 +15,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import threading
 from queue import Queue
+from crawl import TikiScraper_link_item
 
 
 
 
-df_link = pd.read_csv('product_link_balo.csv')
+df_link = pd.read_csv('product_link_.csv')
+# TSC = TikiScraper_link_item()
+# df_link = TSC.scrape_page_link()
+
 p1_link = df_link['link_item'].to_list()
-p_link = p1_link[602:1200]
+p_link = p1_link[2:40]
 chrome_options = Options()
 chrome_options.add_argument('--no-sandbox')
 user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
@@ -40,24 +44,32 @@ ratting_point_list = []
 
 number_of_threads = 8
 threads = []
+data = []
+MAX_RETRIES = 5
 
 def get_data_from_link(links):
     driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
+    count  =-1 
     for link in links:
+        count+=1
         driver.get(link)
         sleep(random.randint(3,6))
-
-        try:
-            prices = driver.find_elements(By.CLASS_NAME , "product-price__current-price")
-            if len(prices) == 0:
-                prices_list.append(0)
-            else: 
+        for i in range(MAX_RETRIES):
+            try:
+                prices = driver.find_elements(By.CLASS_NAME , "product-price__current-price")
+                if len(prices) == 0:
+                        prices_list.append(0)
+                        
                 for price in prices:
                     prices_list.append(price.text)
-        
-        except NoSuchElementException:
-            print("khong tim thay element!")
-            prices_list.append(0)
+                break   
+            except Exception:
+                print(f"Element not found, retrying ({i+1}/{MAX_RETRIES})...")
+                if(i==4):
+                    if len(prices) == 0:
+                        prices_list.append(0)
+                        break
+                sleep(1)
                 
                 
 
@@ -169,6 +181,18 @@ def get_data_from_link(links):
         except Exception as e:
             print("Khong lay duoc rating_point!")
             ratting_point_list.append(0)
+        
+        try:
+            data.append([link, prices_list[count], discount_list[count], reivew_counts_list[count], quantity_sold_list[count], rate_shop_list[count], shop_follow_list[count], count_code_discount_list[count], ratting_point_list[count]])
+            
+        except IndexError as e:
+            print(f"Error occurred while processing link {links[i]}: {e}")
+        except Exception as e:
+                print(f"Error occurred while processing link {links[i]}: {e}")
+
+        df = pd.DataFrame(data, columns=['Link', 'Price', 'Discount', 'Number of Ratings', 'Number of Reviews', 'Store Rating', 'Number of Store Followers', 'Available Coupons', 'Average Rating'])
+        df.to_csv('data.csv', index=False)
+ 
 for i in range(number_of_threads):
     start = i * (len(p_link) // number_of_threads)
     end = (i + 1) * (len(p_link) // number_of_threads)
@@ -188,32 +212,32 @@ for t in threads:
 
 
 
-print(prices_list)
-print(len(prices_list))
-print(discount_list)
-print(len(discount_list))
-print(reivew_counts_list)
-print(len(reivew_counts_list))
+# print(prices_list)
+# print(len(prices_list))
+# print(discount_list)
+# print(len(discount_list))
+# print(reivew_counts_list)
+# print(len(reivew_counts_list))
 
-print(quantity_sold_list)
-print(len(quantity_sold_list))
+# print(quantity_sold_list)
+# print(len(quantity_sold_list))
 
-print(rate_shop_list)
-print(len(rate_shop_list))
-
-
-print(shop_follow_list)
-print(len(shop_follow_list))
-
-print(count_code_discount_list)
-print(len(count_code_discount_list))
-
-print(ratting_point_list)
-print(len(ratting_point_list))
+# print(rate_shop_list)
+# print(len(rate_shop_list))
 
 
+# print(shop_follow_list)
+# print(len(shop_follow_list))
+
+# print(count_code_discount_list)
+# print(len(count_code_discount_list))
+
+# print(ratting_point_list)
+# print(len(ratting_point_list))
 
 
-df1 = pd.DataFrame({ 'price': prices_list , 'discount': discount_list , 'review_count': reivew_counts_list , 'quantity_sold': quantity_sold_list , 'rate_shop': rate_shop_list , 'shop_follow' : shop_follow_list , 'count_code' : count_code_discount_list , 'rating_avarage' : ratting_point_list} )
 
-df1.to_csv('all_item_balo_602_1200.csv', index=True)
+
+# df1 = pd.DataFrame({ 'price': prices_list , 'discount': discount_list , 'review_count': reivew_counts_list , 'quantity_sold': quantity_sold_list , 'rate_shop': rate_shop_list , 'shop_follow' : shop_follow_list , 'count_code' : count_code_discount_list , 'rating_avarage' : ratting_point_list} )
+
+# df1.to_csv('all_item_balo_602_1200.csv', index=True)

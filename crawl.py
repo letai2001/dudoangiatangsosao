@@ -33,8 +33,9 @@ class TikiScraper_link_item:
 
             MAX_RETRIES = 5
             def scrape_page(links):
-                driver = self.driver
+                
                 for link in links:
+                    driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
                     for i in range(0, 51):
                     # Truy cập trang Tiki có chỉ số i
                         
