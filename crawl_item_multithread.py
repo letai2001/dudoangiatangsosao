@@ -16,7 +16,9 @@ from selenium.webdriver.common.keys import Keys
 import threading
 from queue import Queue
 from crawl import TikiScraper_link_item
-
+import json
+from selenium.common.exceptions import TimeoutException
+import os
 
 
 
@@ -25,7 +27,7 @@ df_link = pd.read_csv('product_link_.csv')
 # df_link = TSC.scrape_page_link()
 
 p1_link = df_link['link_item'].to_list()
-p_link = p1_link[2:40]
+p_link = p1_link[42:100]
 chrome_options = Options()
 chrome_options.add_argument('--no-sandbox')
 user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
@@ -33,166 +35,209 @@ chrome_options.add_argument(f'user-agent={user_agent}')
         
 # driver.get('https://tiki.vn/gau-bong-cho-corgi-cao-cap-memon-thu-nhoi-bong-cho-corgi-map-tron-de-thuong-mem-min-p187183184.html?itm_campaign=tiki-reco_UNK_DT_UNK_UNK_tiki-listing_UNK_p-category-mpid-listing-v1_202303190600_MD_batched_PID.187183186&itm_medium=CPC&itm_source=tiki-reco&spid=187183186')
 # sleep(random.randint(8,15))
-prices_list = []
-discount_list = []
-reivew_counts_list = []
-quantity_sold_list = []
-rate_shop_list = []
-shop_follow_list = []
-count_code_discount_list = []
-ratting_point_list = []
-
-number_of_threads = 8
-threads = []
 data = []
 MAX_RETRIES = 5
+number_of_threads = 8
+def find_ele(driver , class_name):
+    for j in range(MAX_RETRIES):
+            try:
+                    x = driver.find_element(By.CLASS_NAME , class_name)
+                    if x is not None:
+                        x = x.text
+                    else :
+                        x  = 0
+                    break   
+            except Exception:
+                    print(f"Element not found, retrying ({j+1}/{MAX_RETRIES})...")
+                    if(j==4):
+                        x = 0
+                    sleep(1.5*j)
+    return x
+lock = threading.Lock()
+visited_links = []
+# Open the JSON file for reading
 
+
+try:
+    with open('data.json', 'r') as f:
+        for line in f:
+            obj = json.loads(line)
+            visited_links.append(obj['link'])
+except json.decoder.JSONDecodeError as e:
+    print(f'Lỗi phân tích JSON: {e}')
 def get_data_from_link(links):
     driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
-    count  =-1 
     for link in links:
-        count+=1
-        driver.get(link)
-        sleep(random.randint(3,6))
-        for i in range(MAX_RETRIES):
-            try:
-                prices = driver.find_elements(By.CLASS_NAME , "product-price__current-price")
-                if len(prices) == 0:
-                        prices_list.append(0)
-                        
-                for price in prices:
-                    prices_list.append(price.text)
-                break   
-            except Exception:
-                print(f"Element not found, retrying ({i+1}/{MAX_RETRIES})...")
-                if(i==4):
-                    if len(prices) == 0:
-                        prices_list.append(0)
-                        break
-                sleep(1)
-                
-                
-
-        try:
-            discounts = driver.find_elements(By.CLASS_NAME, "product-price__discount-rate")
-            if len(discounts) == 0:
-                discount_list.append("0")
-            else:
-                for discount in discounts:
-                    discount_list.append(discount.text)
-        except Exception as e:
-            print("Khong lay duoc discount")
-            discount_list.append(0)
-
-        try:
-            review_counts = driver.find_elements(By.CLASS_NAME , "number")
-
-            if len(review_counts) == 0:
-                reivew_counts_list.append(0)
-            else: 
-                for review_count in review_counts:
-                    reivew_counts_list.append(int(review_count.text.split()[1]))
-        except Exception as e:
-            print("Khong lay duoc review_count")
-            reivew_counts_list.append(0)
-                    
-        try: 
-            quantity_sold = driver.find_element(By.CSS_SELECTOR, 'div[data-view-id="pdp_quantity_sold"].styles__StyledQuantitySold-sc-1u1gph7-2.exWbxD')
-         
-            if quantity_sold is None:
-                quantity_sold_list.append(0)
-                
-            else: 
-                sold_number = quantity_sold.get_attribute("innerText").split()[2]
-                quantity_sold_list.append(sold_number)
-        except Exception as e:
-            print("khong thay phan tu quantitysold")
-            quantity_sold_list.append(0)
-
-
-
-        try:
-            item_review_elements = driver.find_elements(By.CLASS_NAME, "item.review")
-            if item_review_elements:
-                item_review = item_review_elements[0]
-                title_div = item_review.find_element(By.CLASS_NAME, "title")
-                span = title_div.find_element(By.TAG_NAME, "span")
-                rating_text = span.get_attribute("textContent")
-                match = re.search(r"\d+\.\d+", rating_text)
-                if match:
-                    rating = float(match.group())
-                else:
-                    rating = 0
-                rate_shop_list.append(rating)
-            else:
-                rate_shop_list.append(0)
-        except Exception as e: 
-            print("khong thay phan tu item_review")
-            rate_shop_list.append(0)
-
-
-
-
-        
-        try:
-            shop_follow = driver.find_element(By.CLASS_NAME, "item.normal") 
-            if shop_follow is None:
-                shop_follow_list.append(0)
-            else:
-                try:
-                    title_div = shop_follow.find_element(By.CLASS_NAME, "title")
-                    span = title_div.find_element(By.TAG_NAME, "span")
-                    follow_text = span.get_attribute("textContent")
-                    follow = humanfriendly.parse_size(follow_text, binary=True)
-                    shop_follow_list.append(follow)
-                except:
-                    shop_follow_list.append(0)
-        except Exception as e:
-            print("Khong lây dc shop_follow!")
-            shop_follow_list.append(0)
-
-        try:
-            count_codes = driver.find_elements(By.CLASS_NAME, "coupon__text")
-
-            if len(count_codes) == 0:
-                count_code_discount_list.append(0)
-            else:
-                for count_code in count_codes:
-                    try:
-                        count_code_discount_list.append(int(count_code.text.split(" ")[0]))
-                    except:
-                        count_code_discount_list.append(0)
-        except Exception as e:
-            print("Khong lây dc count_code!")
-            count_code_discount_list.append(0)
-
-        
-        html = driver.find_element(By.TAG_NAME, 'html')
-        html.send_keys(Keys.END)
-        sleep(3)
-
-        try:
-            ratting_points = driver.find_elements(By.CLASS_NAME , "review-rating__point")
-            if len(ratting_points) == 0:
-                ratting_point_list.append('0')
-            else:
-                for ratting_point in ratting_points:
-                    ratting_point_list.append(ratting_point.text)
-        except Exception as e:
-            print("Khong lay duoc rating_point!")
-            ratting_point_list.append(0)
-        
-        try:
-            data.append([link, prices_list[count], discount_list[count], reivew_counts_list[count], quantity_sold_list[count], rate_shop_list[count], shop_follow_list[count], count_code_discount_list[count], ratting_point_list[count]])
+        if link not in visited_links:
+            driver.get(link)
+            sleep(2)
+            price = find_ele(driver , "product-price__current-price")
+            discount = find_ele(driver , "product-price__discount-rate")
+            review_count = find_ele(driver , "number")
+            # review_count = int(review_count.split()[1])
+            count_code = find_ele(driver , "coupon__text")
+            # count_code = int(count_code.split(" ")[0])
             
-        except IndexError as e:
-            print(f"Error occurred while processing link {links[i]}: {e}")
-        except Exception as e:
-                print(f"Error occurred while processing link {links[i]}: {e}")
+            
+            sold_number = 0
+            for j in range(MAX_RETRIES):            
+                try: 
+                    quantity_sold = driver.find_element(By.CSS_SELECTOR, 'div[data-view-id="pdp_quantity_sold"].styles__StyledQuantitySold-sc-1u1gph7-2.exWbxD')
+                
+                    if quantity_sold is not None:
+                        sold_number = quantity_sold.get_attribute("innerText").split()[2]
+                        break  # thoát vòng lặp nếu đã xác định được giá trị của biến
+                except Exception as e:
+                    print(f"khong thay phan tu quantitysold , retrying ({j+1}/{MAX_RETRIES})...")
+                    sleep(1)
 
-        df = pd.DataFrame(data, columns=['Link', 'Price', 'Discount', 'Number of Ratings', 'Number of Reviews', 'Store Rating', 'Number of Store Followers', 'Available Coupons', 'Average Rating'])
-        df.to_csv('data.csv', index=False)
+
+            #rate_shop
+            rating = 0
+            
+            for j in range(MAX_RETRIES): 
+                try:
+                    item_review_elements = driver.find_elements(By.CLASS_NAME, "item.review")
+                    if item_review_elements:
+                        item_review = item_review_elements[0]
+                        title_div = item_review.find_element(By.CLASS_NAME, "title")
+                        span = title_div.find_element(By.TAG_NAME, "span")
+                        rating_text = span.get_attribute("textContent")
+                        match = re.search(r"\d+\.\d+", rating_text)
+                        if match:
+                            rating = float(match.group())
+                        break  # thoát vòng lặp nếu đã xác định được giá trị của biến
+                    else:
+                        break  # thoát vòng lặp nếu không tìm thấy phần tử
+                except Exception as e: 
+                    print(f"khong thay phan tu item_review , retrying ({j+1}/{MAX_RETRIES})...")
+                    sleep(1)
+           
+            
+
+
+
+
+            for j in range(MAX_RETRIES): 
+                try:
+                    shop_follow = driver.find_element(By.CLASS_NAME, "item.normal") 
+                    if shop_follow is None:
+                        follow = 0
+                    else:
+                        try:
+                            title_div = shop_follow.find_element(By.CLASS_NAME, "title")
+                            span = title_div.find_element(By.TAG_NAME, "span")
+                            follow_text = span.get_attribute("textContent")
+                            follow = humanfriendly.parse_size(follow_text, binary=True)
+                            # shop_follow_list.append(follow)
+                        except:
+                            follow = 0
+                except Exception as e:
+                    print(f"Khong lây dc shop_follow , retrying ({j+1}/{MAX_RETRIES})...!")
+                    if(j==4):
+                            follow  = 0
+                    sleep(1)
+
+            #rep_chat
+            for j in range(MAX_RETRIES): 
+                try:
+                    rep_chat_ele = driver.find_element(By.CLASS_NAME, "item.chat") 
+                    if shop_follow is None:
+                        rep_chat = 0
+                    else:
+                        try:
+                            title_div = shop_follow.find_element(By.CLASS_NAME, "title")
+                            span = title_div.find_element(By.TAG_NAME, "span")
+                            rep_chat_text = span.get_attribute("textContent")
+                            rep_chat = humanfriendly.parse_size(rep_chat_text, binary=True)
+                            # shop_follow_list.append(follow)
+                        except:
+                            rep_chat = 0
+                except Exception as e:
+                    print(f"Khong lây dc rep_chat , retrying ({j+1}/{MAX_RETRIES})...!")
+                    if(j==4):
+                            rep_chat  = 0
+                    sleep(1)
+            for j in range(MAX_RETRIES): 
+                try:
+                    benefit_elements = driver.find_elements(By.CLASS_NAME , 'benefit-item')
  
+                    if benefit_elements:
+                        time_refund_ele = benefit_elements[2]
+                        benefit_text  = time_refund_ele.text
+                        match = re.search(r'\d+', benefit_text)
+
+
+                        if match:
+                            time_refund = int(match.group())
+                        else:
+                            time_refund = None
+                        break
+
+                except Exception as e:
+                    print(f"Khong lây dc time_refund , retrying ({j+1}/{MAX_RETRIES})...!")
+                    if(j==4):
+                            time_refund  = 0
+                    sleep(1)
+            
+
+
+            
+            
+            try:
+                # height = driver.execute_script("return document.documentElement.scrollHeight")
+
+                # # Cuộn trang xuống 1/3 chiều cao của trang
+                # driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.45)))
+                html = driver.find_element(By.TAG_NAME, 'html')
+                html.send_keys(Keys.END) 
+
+                sleep(6)
+                wait = WebDriverWait(driver, 20)
+                rating_point = wait.until(lambda driver: find_ele(driver, "review-rating__point"))
+            except TimeoutException:
+                print("Element not found within 20 seconds")
+                rating_point = 0
+        
+            # Check if JSON file exists and is not empty
+            
+
+            
+
+            
+            # link2.append(a)
+            # new_product = {"link": link, "price": price, 'discount': discount, 'review_count': review_count,
+            #         "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow,
+            #         "rating_avarage": rating_point}
+            data.append({"link": link, "price": price, 'discount': discount, 'review_count': review_count,
+                    "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow, "rep_chat":rep_chat , "time_refund":time_refund,
+                    "rating_avarage": rating_point})
+            visited_links.append(link)
+        # if os.path.exists('data.json') and os.path.getsize('data.json') > 0:
+        #     with open('data.json', 'r') as f:
+        #         data_json = json.load(f)
+        # else:
+        #     data_json = []
+
+
+        # link_set = set()
+        # if(len(data_json)>0):
+        #     for product in data_json:
+        #         link_set.add(product['link'])
+        # if new_product['link'] not in link_set:
+        #     data.append(new_product)
+        #     link_set.add(new_product['link'])
+
+    # Ghi dữ liệu vào file JSON
+            with lock:
+                with open('data.json', 'a') as f:
+                    json.dump(data[-1], f)
+                    f.write('\n')
+
+        # df = pd.DataFrame(data, columns=['Link', 'Price', 'Discount', 'Number of Ratings', 'Number of Reviews', 'Store Rating', 'Number of Store Followers', 'Available Coupons', 'Average Rating'])
+        
+threads = []
+
 for i in range(number_of_threads):
     start = i * (len(p_link) // number_of_threads)
     end = (i + 1) * (len(p_link) // number_of_threads)
