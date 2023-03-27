@@ -17,6 +17,7 @@ import threading
 from queue import Queue
 import json
 from selenium.common.exceptions import TimeoutException
+from bs4 import BeautifulSoup
 
 
 
@@ -130,6 +131,7 @@ for i in range(9 , 18):
                         shop_follow = driver.find_element(By.CLASS_NAME, "item.normal") 
                         if shop_follow is None:
                             follow = 0
+                            break
                         else:
                             try:
                                 title_div = shop_follow.find_element(By.CLASS_NAME, "title")
@@ -139,6 +141,7 @@ for i in range(9 , 18):
                                 # shop_follow_list.append(follow)
                             except:
                                 follow = 0
+                            break  # thoát vòng lặp nếu đã xác định được giá trị của bi
                     except Exception as e:
                         print(f"Khong lây dc shop_follow , retrying ({j+1}/{MAX_RETRIES})...!")
                         if(j==4):
@@ -156,31 +159,18 @@ for i in range(9 , 18):
                                 title_div = rep_chat_ele.find_element(By.CLASS_NAME, "title")
                                 span = title_div.find_element(By.TAG_NAME, "span")
                                 rep_chat_text = span.get_attribute("textContent")
-                                
+                                break
                                 # shop_follow_list.append(follow)
                             except:
                                 rep_chat_text = "N/A"
+                                break
                     except Exception as e:
                         print(f"Khong lây dc rep_chat , retrying ({j+1}/{MAX_RETRIES})...!")
                         if(j==4):
-                                rep_chat  = 0
+                                rep_chat_text = "N/A"
                         sleep(1)
-                for j in range(MAX_RETRIES): 
-                    try:
-                        benefit_elements = driver.find_elements(By.CSS_SELECTOR , '.benefit-item')
-    
-                        if benefit_elements:
-                            time_refund_ele = benefit_elements[2]
-                            benefit_text  = time_refund_ele.text
-                            break
-                        else: 
-                            benefit_text  = "N/A"
-                            break
-                    except Exception as e:
-                        print(f"Khong lây dc time_refund , retrying ({j+1}/{MAX_RETRIES})...!")
-                        if(j==4):
-                                benefit_text  = "N/A"
-                        sleep(1)
+                
+
                 
 
 
@@ -194,11 +184,14 @@ for i in range(9 , 18):
                     # html = driver.find_element(By.TAG_NAME, 'html')
                     # html.send_keys(Keys.END) 
                     sleep(2)
+                    number_image = find_ele("review-images__heading")
                     driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.7)))
 
                     sleep(6)
                     wait = WebDriverWait(driver, 20)
-                    rating_point = wait.until(lambda driver: find_ele(driver, "review-rating__point"))
+                    
+                    rating_point = wait.until(lambda driver: find_ele("review-rating__point"))
+                    
                 except TimeoutException:
                     print("Element not found within 20 seconds")
                     rating_point = 0
@@ -214,7 +207,7 @@ for i in range(9 , 18):
                 #         "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow,
                 #         "rating_avarage": rating_point}
                 data.append({"link": a, "price": price, 'discount': discount, 'review_count': review_count,
-                        "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow, "rep_chat":rep_chat_text , "time_refund":benefit_text,
+                        "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow, "rep_chat":rep_chat_text , "number_image":number_image,
                         "rating_avarage": rating_point})
                 visited_links.append(a)
             # if os.path.exists('data.json') and os.path.getsize('data.json') > 0:
