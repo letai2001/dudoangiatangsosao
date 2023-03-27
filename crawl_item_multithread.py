@@ -142,17 +142,17 @@ def get_data_from_link(links):
             for j in range(MAX_RETRIES): 
                 try:
                     rep_chat_ele = driver.find_element(By.CLASS_NAME, "item.chat") 
-                    if shop_follow is None:
-                        rep_chat = 0
+                    if rep_chat_ele is None:
+                        rep_chat_text = "N/A"
                     else:
                         try:
-                            title_div = shop_follow.find_element(By.CLASS_NAME, "title")
+                            title_div = rep_chat_ele.find_element(By.CLASS_NAME, "title")
                             span = title_div.find_element(By.TAG_NAME, "span")
                             rep_chat_text = span.get_attribute("textContent")
-                            rep_chat = humanfriendly.parse_size(rep_chat_text, binary=True)
+                            
                             # shop_follow_list.append(follow)
                         except:
-                            rep_chat = 0
+                            rep_chat_text = "N/A"
                 except Exception as e:
                     print(f"Khong lây dc rep_chat , retrying ({j+1}/{MAX_RETRIES})...!")
                     if(j==4):
@@ -160,24 +160,19 @@ def get_data_from_link(links):
                     sleep(1)
             for j in range(MAX_RETRIES): 
                 try:
-                    benefit_elements = driver.find_elements(By.CLASS_NAME , 'benefit-item')
+                    benefit_elements = driver.find_elements(By.CSS_SELECTOR , '.benefit-item')
  
                     if benefit_elements:
                         time_refund_ele = benefit_elements[2]
                         benefit_text  = time_refund_ele.text
-                        match = re.search(r'\d+', benefit_text)
-
-
-                        if match:
-                            time_refund = int(match.group())
-                        else:
-                            time_refund = None
                         break
-
+                    else: 
+                        benefit_text  = "N/A"
+                        break
                 except Exception as e:
                     print(f"Khong lây dc time_refund , retrying ({j+1}/{MAX_RETRIES})...!")
                     if(j==4):
-                            time_refund  = 0
+                            benefit_text  = "N/A"
                     sleep(1)
             
 
@@ -185,12 +180,14 @@ def get_data_from_link(links):
             
             
             try:
-                # height = driver.execute_script("return document.documentElement.scrollHeight")
+                height = driver.execute_script("return document.documentElement.scrollHeight")
 
                 # # Cuộn trang xuống 1/3 chiều cao của trang
-                # driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.45)))
-                html = driver.find_element(By.TAG_NAME, 'html')
-                html.send_keys(Keys.END) 
+                driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.45)))
+                # html = driver.find_element(By.TAG_NAME, 'html')
+                # html.send_keys(Keys.END) 
+                sleep(2)
+                driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.7)))
 
                 sleep(6)
                 wait = WebDriverWait(driver, 20)
@@ -210,7 +207,7 @@ def get_data_from_link(links):
             #         "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow,
             #         "rating_avarage": rating_point}
             data.append({"link": link, "price": price, 'discount': discount, 'review_count': review_count,
-                    "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow, "rep_chat":rep_chat , "time_refund":time_refund,
+                    "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow, "rep_chat":rep_chat_text , "time_refund":benefit_text,
                     "rating_avarage": rating_point})
             visited_links.append(link)
         # if os.path.exists('data.json') and os.path.getsize('data.json') > 0:
