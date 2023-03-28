@@ -44,7 +44,7 @@ driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_seleni
 # data =  []
 data = []
 MAX_RETRIES = 5
-visited_links = []
+visited_links = set()
 # Open the JSON file for reading
 
 
@@ -52,7 +52,7 @@ try:
     with open('data.json', 'r') as f:
         for line in f:
             obj = json.loads(line)
-            visited_links.append(obj['link'])
+            visited_links.add(obj['link'])
 except json.decoder.JSONDecodeError as e:
     print(f'Lỗi phân tích JSON: {e}')
 
@@ -209,7 +209,7 @@ for i in range(9 , 18):
                 data.append({"link": a, "price": price, 'discount': discount, 'review_count': review_count,
                         "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow, "rep_chat":rep_chat_text , "number_image":number_image,
                         "rating_avarage": rating_point})
-                visited_links.append(a)
+                visited_links.add(a)
             # if os.path.exists('data.json') and os.path.getsize('data.json') > 0:
             #     with open('data.json', 'r') as f:
             #         data_json = json.load(f)
