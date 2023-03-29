@@ -174,18 +174,21 @@ def get_data_from_link(links , lock , visited_links_lock):
                         height = driver.execute_script("return document.documentElement.scrollHeight")
 
                         # # Cuộn trang xuống 1/3 chiều cao của trang
-                        driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.45)))
+                        driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.2)))
                         # html = driver.find_element(By.TAG_NAME, 'html')
                         # html.send_keys(Keys.END) 
                         sleep(2)
-                        number_image = find_ele(driver , "review-images__heading")
-                        driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.7)))
+                        
+                        driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.4)))
 
-                        sleep(6)
+                        sleep(2)
+                        driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.6)))
+                        number_image = find_ele(driver , "review-images__heading")
                         wait = WebDriverWait(driver, 20)
-                        
-                        rating_point = wait.until(lambda driver: find_ele(driver , "review-rating__point"))
-                        
+                        sleep(4)
+                        rating_point_ele = wait.until(lambda ele_rating_point: driver.find_element(By.CLASS_NAME ,  "review-rating__point"))
+                        rating_point = rating_point_ele.text
+                        # x = driver.find_element(By.CLASS_NAME ,  "review-rating__point")
                     except TimeoutException:
                         print("Element not found within 20 seconds")
                         rating_point = 0
