@@ -183,10 +183,13 @@ def get_data_from_link(links , lock , visited_links_lock):
 
                         sleep(2)
                         driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.6)))
+                        sleep(2)
+                        driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.7)))
                         number_image = find_ele(driver , "review-images__heading")
                         wait = WebDriverWait(driver, 20)
                         sleep(4)
                         rating_point_ele = wait.until(lambda ele_rating_point: driver.find_element(By.CLASS_NAME ,  "review-rating__point"))
+                        
                         rating_point = rating_point_ele.text
                         # x = driver.find_element(By.CLASS_NAME ,  "review-rating__point")
                     except TimeoutException:
