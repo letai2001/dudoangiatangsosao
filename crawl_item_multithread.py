@@ -22,11 +22,11 @@ import os
 
 
 
-df_link = pd.read_csv('product_link_.csv')
+df_link = pd.read_csv('link_fix_rep.csv')
 # TSC = TikiScraper_link_item()
 # df_link = TSC.scrape_page_link()
 
-p_link = df_link['link_item'].to_list()
+p_link = df_link['link'].to_list()
 # p_link = p1_link[42:100]
 chrome_options = Options()
 chrome_options.add_argument('--no-sandbox')
@@ -60,7 +60,7 @@ visited_links = set()
 
 
 try:
-    with open('data.json', 'r') as f:
+    with open('data_fix.json', 'r') as f:
         for line in f:
             obj = json.loads(line)
             visited_links.add(obj['link'])
@@ -212,7 +212,7 @@ def get_data_from_link(links , lock , visited_links_lock):
                         visited_links.add(link)
         # Ghi dữ liệu vào file JSON
                     with lock:
-                        with open('data.json', 'a') as f:
+                        with open('data_fix.json', 'a') as f:
                             json.dump(data[-1], f)
                             f.write('\n')
 
