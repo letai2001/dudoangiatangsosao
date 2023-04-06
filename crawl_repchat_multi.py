@@ -112,10 +112,7 @@ def get_data_from_link(links , lock , visited_links_lock):
                    
                 
                 
-                    # link2.append(a)
-                    # new_product = {"link": link, "price": price, 'discount': discount, 'review_count': review_count,
-                    #         "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow,
-                    #         "rating_avarage": rating_point}
+                    
                     data.append({"link": link,  "rep_chat":rep_chat_text })
                     
             

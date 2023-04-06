@@ -9,6 +9,7 @@ import pandas as pd
 import itertools
 from crawl_category import TikiScraper
 import threading
+import csv
 
 chrome_options = Options()
 chrome_options.add_argument('--no-sandbox')
@@ -22,46 +23,61 @@ chrome_options.add_argument(f'user-agent={user_agent}')
 class TikiScraper_link_item:
         def __init__(self):
             self.driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
+            self.crawled_links = set()
 
 
         def scrape_page_link(self):
             scraper = TikiScraper()
-            
+            link_csv = set()
+
+            with open('product_link_.csv', 'r', encoding='utf-8') as f:
+                csv_reader = csv.DictReader(f)
+                for row in csv_reader:
+                    link_csv.add(row['link_item'])
     # Lấy danh sách liên kết
             links = scraper.get_links()
-            link_item = []
+            link_items = []
+            
 
             MAX_RETRIES = 5
             def scrape_page(links):
                 
+
                 for link in links:
-                    driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
-                    for i in range(0, 51):
-                    # Truy cập trang Tiki có chỉ số i
-                        
-                        if i > 0:
-                            driver.get(link + '?page='+ str(i))
-                        else: 
-                            driver.get(link)
-                        sleep(random.randint(1,3))
+                    if link not in self.crawled_links and link not in link_csv:
+                        driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
+                        for i in range(0, 51):
+                        # Truy cập trang Tiki có chỉ số i
+                            
+                            if i > 0:
+                                driver.get(link + '?page='+ str(i))
+                            else: 
+                                driver.get(link)
+                            sleep(random.randint(1,3))
 
-                        for i in range(MAX_RETRIES):
-                            try:
-                                elems = driver.find_elements(By.CLASS_NAME , "product-item")
-                                break
-                            except NoSuchElementException:
-                                print(f"Element not found, retrying ({i+1}/{MAX_RETRIES})...")
-                                sleep(1)
-
-                        for elem in elems:
                             for i in range(MAX_RETRIES):
-                                try: 
-                                    link2  = elem.get_attribute('href')
-                                    link_item.append(link2)
+                                try:
+                                    elems = driver.find_elements(By.CLASS_NAME , "product-item")
                                     break
-                                except:
-                                    print("khong thay href!")
+                                except NoSuchElementException:
+                                    print(f"Element not found, retrying ({i+1}/{MAX_RETRIES})...")
                                     sleep(1)
+
+                            for elem in elems:
+                                for i in range(MAX_RETRIES):
+                                    try: 
+                                        link2  = elem.get_attribute('href')
+                                        link_items.append(link2)
+                                        break
+                                    except:
+                                        print("khong thay href!")
+                                        sleep(1)
+                            self.crawled_links.add(link)
+                            with open('product_link_.csv', 'a', encoding='utf-8', newline='') as f:
+                                writer = csv.writer(f)
+                                writer.writerow([link2])
+
+                            
             threads = []
             number_of_threads = 8
             for i in range(number_of_threads):
@@ -85,7 +101,10 @@ class TikiScraper_link_item:
 
 
             self.driver.quit()
-            return link_item
+            
+            link_csv_list = list(link_csv)
+
+            return link_items + link_csv_list
                            
         # elems_prices = driver.find_elements(By.CSS_SELECTOR , ".price-discount__price")
         # for elem_price in elems_prices:
