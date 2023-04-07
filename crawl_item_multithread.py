@@ -161,6 +161,7 @@ def find_rating(driver , classname):
 
 lock = threading.Lock()
 visited_links_lock  = threading.Lock()
+queue_lock = threading.Lock()
 visited_links = set()
 # Open the JSON file for reading
 
@@ -201,6 +202,7 @@ def get_data_from_link(queue , lock , visited_links_lock , queue_lock):
                         
                     driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.4)))
 
+
                     sleep(4)
                     number_image = find_ele(driver , "review-images__heading")
                     rating_point = find_rating(driver, "review-rating__point")
@@ -228,7 +230,7 @@ def main():
     threads = []
 
     for i in range(number_of_threads):
-        t = threading.Thread(target=get_data_from_link, args=(queue, lock, visited_links_lock))
+        t = threading.Thread(target=get_data_from_link, args=(queue, lock, visited_links_lock , queue_lock ,))
         threads.append(t)
 
     # Bắt đầu chạy các thread

@@ -52,9 +52,9 @@ def find_rating(classname):
                     height = driver.execute_script("return document.documentElement.scrollHeight")
                     wait = WebDriverWait(driver, 20)
                     
-                    rating_point_ele = wait.until(EC.presence_of_element_located((By.CLASS_NAME, classname)))
-                    if rating_point_ele is not None:
-                        x = rating_point_ele.text
+                    element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, classname)))
+                    if element is not None:
+                        x = element.text
                     else :
                         x  = 0
                     break 
