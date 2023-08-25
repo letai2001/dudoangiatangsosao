@@ -16,22 +16,15 @@ chrome_options.add_argument('--no-sandbox')
 user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
 chrome_options.add_argument(f'user-agent={user_agent}')
 
-# Open URL
-# driver.get("https://tiki.vn/balo-va-vali/c6000")
-# sleep(random.randint(2,4))
-# Khởi tạo đối tượng scraper
 class TikiScraper_link_item:
         def __init__(self):
-            self.driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
+            self.driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\chromdriv\\chromedriver-win64\\chromedriver.exe" , options=chrome_options)
             self.crawled_links = set()
 
 
         def scrape_page_link(self):
             scraper = TikiScraper()
             crawled_links = set()
-            lock = threading.Lock()
-            crawled_links_lock  = threading.Lock()
-            link_item_lock = threading.Lock()
 
             with open('product_link_.csv', 'r', encoding='utf-8') as f:
                 csv_reader = csv.DictReader(f)
@@ -47,7 +40,7 @@ class TikiScraper_link_item:
                 
                 for link in links:
                     
-                    driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
+                    driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\chromdriv\\chromedriver-win64\\chromedriver.exe" , options=chrome_options)
                     for i in range(0, 51):
                     # Truy cập trang Tiki có chỉ số i
                         
@@ -72,9 +65,7 @@ class TikiScraper_link_item:
                                         
                                     link2  = elem.get_attribute('href')
                                     if link not in self.crawled_links:
-                                        with crawled_links_lock:
                                             self.crawled_links.add(link2)
-                                        with lock:   
                                             with open('C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\product_link_.csv', 'a', encoding='utf-8', newline='') as f:
                                                 writer = csv.writer(f)
                                                 writer.writerow([link2])
@@ -85,25 +76,9 @@ class TikiScraper_link_item:
                                     sleep(1)
 
                             
-            threads = []
-            number_of_threads = 8
-            for i in range(number_of_threads):
-                start = i * (len(links) // number_of_threads)
-                end = (i + 1) * (len(links) // number_of_threads)
-                if i == number_of_threads - 1:
-                    end = len(links)
-                thread_links = links[start:end]
-                t = threading.Thread(target=scrape_page, args=(thread_links,))
-                threads.append(t)
-            
+            scrape_page(links)
 
     # Bắt đầu chạy các thread
-            for t in threads:  
-                t.start()
-
-            # Đợi cho tất cả các thread hoàn thành công việc
-            for t in threads:
-                t.join()
 
 
 
@@ -120,3 +95,6 @@ class TikiScraper_link_item:
 
 # df1 = pd.DataFrame({'link_item': link_item} )
 # df1.to_csv('product_link_.csv', index=True)
+tiki_link = TikiScraper_link_item()
+list = tiki_link.scrape_page_link()
+print(list)

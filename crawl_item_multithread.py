@@ -26,13 +26,12 @@ chrome_options.add_argument('--no-sandbox')
 user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36'
 chrome_options.add_argument(f'user-agent={user_agent}')
 
-Tiki_link = TikiScraper_link_item()
-p_link = Tiki_link.scrape_page_link()
-        
-data = []
+# Tiki_link = TikiScraper_link_item()
+# p_link = Tiki_link.scrape_page_link()
 
 MAX_RETRIES = 5
 number_of_threads = 8
+data = []
 def find_rep_shop(driver):
     for j in range(MAX_RETRIES): 
         try:
@@ -173,7 +172,7 @@ try:
 except json.decoder.JSONDecodeError as e:
     print(f'Lỗi phân tích JSON: {e}')
 def get_data_from_link(queue , lock , visited_links_lock , queue_lock):
-    driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\chromedriver.exe" , options=chrome_options)
+    driver = webdriver.Chrome("chromedriver.exe" , options=chrome_options)
     
     while(True):
             with queue_lock:
@@ -222,6 +221,14 @@ def get_data_from_link(queue , lock , visited_links_lock , queue_lock):
 
         # df = pd.DataFrame(data, columns=['Link', 'Price', 'Discount', 'Number of Ratings', 'Number of Reviews', 'Store Rating', 'Number of Store Followers', 'Available Coupons', 'Average Rating'])
 def main():
+    df_link = pd.read_csv('product_link_.csv')
+# TSC = TikiScraper_link_item()
+# df_link = TSC.scrape_page_link()
+
+    p_link = df_link['link_item'].to_list()
+     
+    
+
     queue = Queue()
     for link in p_link:
         queue.put(link)
