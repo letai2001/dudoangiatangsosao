@@ -15,7 +15,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 import threading
 from queue import Queue
-from crawl import TikiScraper_link_item
+# from crawl import TikiScraper_link_item
 import json
 from selenium.common.exceptions import TimeoutException
 import os
@@ -101,10 +101,10 @@ def find_rate_shop(driver):
             print(f"khong thay phan tu item_review , retrying ({j+1}/{MAX_RETRIES})...")
             sleep(1)
     return x
-def find_quantity_sold(driver ,css_name ):
+def find_quantity_sold(driver ,xpath ):
     for j in range(MAX_RETRIES):            
             try: 
-                quantity_sold = driver.find_element(By.CSS_SELECTOR, css_name)
+                quantity_sold = driver.find_element(By.XPATH, xpath)
             
                 if quantity_sold is not None:
                     x = quantity_sold.get_attribute("innerText").split()[2]
@@ -141,7 +141,7 @@ def find_rating(driver , classname):
     for j in range(MAX_RETRIES+1):
             try:
                     height = driver.execute_script("return document.documentElement.scrollHeight")
-                    wait = WebDriverWait(driver, 15)
+                    wait = WebDriverWait(driver, 5)
                     sleep(4)
                     element = wait.until(EC.presence_of_element_located((By.CLASS_NAME, classname )))
                     if element is not None:
@@ -165,14 +165,14 @@ visited_links = set()
 # Open the JSON file for reading
 
 try:
-    with open('data.json', 'r') as f:
+    with open('data_3.json', 'r') as f:
         for line in f:
             obj = json.loads(line)
             visited_links.add(obj['link'])
 except json.decoder.JSONDecodeError as e:
     print(f'Lỗi phân tích JSON: {e}')
 def get_data_from_link(queue , lock , visited_links_lock , queue_lock):
-    driver = webdriver.Chrome("chromedriver.exe" , options=chrome_options)
+    driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\chromdriv\\chromedriver-win64\\chromedriver.exe" , options=chrome_options)
     
     while(True):
             with queue_lock:
@@ -184,30 +184,37 @@ def get_data_from_link(queue , lock , visited_links_lock , queue_lock):
                     driver.get(link)
                     sleep(2)
                     price = find_ele(driver , "product-price__current-price")
-                    discount = find_ele(driver , "product-price__discount-rate")
-                    review_count = find_ele(driver , "number")
-                    count_code = find_ele(driver , "coupon__text")
-                    sold_number = find_quantity_sold(driver, 'div[data-view-id="pdp_quantity_sold"].styles__StyledQuantitySold-sc-1u1gph7-2.exWbxD' )
-                    rating = find_rate_shop(driver)
-                    follow = find_follow_shop(driver)
-                    rep_chat_text = find_rep_shop(driver)
+                    # discount = find_ele(driver , "product-price__discount-rate")
+                    # review_count = find_ele(driver , "number")
+                    # count_code = find_ele(driver , "coupon__text")
+                    # sold_number = find_quantity_sold(driver, "//div[@data-view-id='pdp_quantity_sold']" )
                     
                     height = driver.execute_script("return document.documentElement.scrollHeight")
                         # # Cuộn trang xuống 1/3 chiều cao của trang
-                    driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.2)))
+                    driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.15)))
                         # html = driver.find_element(By.TAG_NAME, 'html')
                         # html.send_keys(Keys.END) 
-                    sleep(2)
-                        
-                    driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.4)))
+                    sleep(4)
+                    rating = find_rate_shop(driver)
+                    follow = find_follow_shop(driver)
+                    rep_chat_text = find_rep_shop(driver)
+
+                    driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.4))) 
+                    sleep(4)
+                    rating = find_rate_shop(driver)
+                    follow = find_follow_shop(driver)
+                    rep_chat_text = find_rep_shop(driver)
+
+                    
+                    driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.6))) 
 
 
                     sleep(4)
+
                     number_image = find_ele(driver , "review-images__heading")
                     rating_point = find_rating(driver, "review-rating__point")
                    
-                    data.append({"link": link, "price": price, 'discount': discount, 'review_count': review_count,
-                            "count_code": count_code, "quantity_sold": sold_number, "rate_shop": rating, "shop_follow": follow, "rep_chat":rep_chat_text , "number_image":number_image,
+                    data.append({"link": link, "price": price,  "rate_shop": rating, "shop_follow": follow, "rep_chat":rep_chat_text , "number_image":number_image,
                             "rating_avarage": rating_point})
                     
             
@@ -215,17 +222,17 @@ def get_data_from_link(queue , lock , visited_links_lock , queue_lock):
                         visited_links.add(link)
         # Ghi dữ liệu vào file JSON
                     with lock:
-                        with open('data.json', 'a') as f:
+                        with open('data_3.json', 'a') as f:
                             json.dump(data[-1], f)
                             f.write('\n')
 
         # df = pd.DataFrame(data, columns=['Link', 'Price', 'Discount', 'Number of Ratings', 'Number of Reviews', 'Store Rating', 'Number of Store Followers', 'Available Coupons', 'Average Rating'])
 def main():
-    df_link = pd.read_csv('product_link_.csv')
+    df_link = pd.read_csv('data_final.csv')
 # TSC = TikiScraper_link_item()
 # df_link = TSC.scrape_page_link()
 
-    p_link = df_link['link_item'].to_list()
+    p_link = df_link['link'].to_list()
      
     
 

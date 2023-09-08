@@ -26,7 +26,7 @@ class TikiScraper_link_item:
             scraper = TikiScraper()
             crawled_links = set()
 
-            with open('product_link_.csv', 'r', encoding='utf-8') as f:
+            with open('product_link_2.csv', 'r', encoding='utf-8') as f:
                 csv_reader = csv.DictReader(f)
                 for row in csv_reader:
                     crawled_links.add(row['link_item'])
@@ -41,7 +41,7 @@ class TikiScraper_link_item:
                 for link in links:
                     
                     driver = webdriver.Chrome("C:\\Users\\Admin\\Downloads\\chromdriv\\chromedriver-win64\\chromedriver.exe" , options=chrome_options)
-                    for i in range(0, 51):
+                    for i in range(0, 10):
                     # Truy cập trang Tiki có chỉ số i
                         
                         if i > 0:
@@ -66,7 +66,7 @@ class TikiScraper_link_item:
                                     link2  = elem.get_attribute('href')
                                     if link not in self.crawled_links:
                                             self.crawled_links.add(link2)
-                                            with open('C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\product_link_.csv', 'a', encoding='utf-8', newline='') as f:
+                                            with open('C:\\Users\\Admin\\Downloads\\crawlDataTraining_selenium\\product_link_2.csv', 'a', encoding='utf-8', newline='') as f:
                                                 writer = csv.writer(f)
                                                 writer.writerow([link2])
                                     break

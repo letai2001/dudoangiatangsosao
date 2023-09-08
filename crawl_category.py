@@ -38,6 +38,3 @@ class TikiScraper:
 
         # Trả về danh sách liên kết
         return links
-tiki = TikiScraper()
-list = tiki.get_links()
-print(list)
