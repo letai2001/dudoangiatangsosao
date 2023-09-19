@@ -102,7 +102,7 @@ def find_rate_shop(driver):
             sleep(1)
     return x
 def find_quantity_sold(driver ,xpath ):
-    for j in range(MAX_RETRIES):            
+    for j in range(3):            
             try: 
                 quantity_sold = driver.find_element(By.XPATH, xpath)
             
@@ -113,7 +113,7 @@ def find_quantity_sold(driver ,xpath ):
                 break  # thoát vòng lặp nếu đã xác định được giá trị của biến
             except Exception as e:
                 print(f"khong thay phan tu quantitysold , retrying ({j+1}/{MAX_RETRIES})...")
-                if(j==MAX_RETRIES-1):
+                if(j==2):
                     x = 0
                 sleep(1)
     return x
@@ -138,7 +138,7 @@ def find_ele(driver , class_name):
     return x
 
 def find_rating(driver , classname):    
-    for j in range(MAX_RETRIES+1):
+    for j in range(3):
             try:
                     height = driver.execute_script("return document.documentElement.scrollHeight")
                     wait = WebDriverWait(driver, 5)
@@ -151,7 +151,7 @@ def find_rating(driver , classname):
                     break 
             except Exception:
                     print(f"Element rating_point_ele or image  not found, retrying ({j+1}/{MAX_RETRIES+1})...")
-                    if(j==MAX_RETRIES):
+                    if(j==2):
                         x = 0
                    
                     driver.execute_script("window.scrollBy(0, {});".format(int(height * (0.4+j*0.1))))
@@ -165,7 +165,7 @@ visited_links = set()
 # Open the JSON file for reading
 
 try:
-    with open('data_3.json', 'r') as f:
+    with open('datarate.json', 'r') as f:
         for line in f:
             obj = json.loads(line)
             visited_links.add(obj['link'])
@@ -187,34 +187,34 @@ def get_data_from_link(queue , lock , visited_links_lock , queue_lock):
                     # discount = find_ele(driver , "product-price__discount-rate")
                     # review_count = find_ele(driver , "number")
                     # count_code = find_ele(driver , "coupon__text")
-                    # sold_number = find_quantity_sold(driver, "//div[@data-view-id='pdp_quantity_sold']" )
+                    sold_number = find_quantity_sold(driver, "//div[@data-view-id='pdp_quantity_sold']" )
                     
                     height = driver.execute_script("return document.documentElement.scrollHeight")
                         # # Cuộn trang xuống 1/3 chiều cao của trang
-                    driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.15)))
-                        # html = driver.find_element(By.TAG_NAME, 'html')
-                        # html.send_keys(Keys.END) 
-                    sleep(4)
-                    rating = find_rate_shop(driver)
-                    follow = find_follow_shop(driver)
-                    rep_chat_text = find_rep_shop(driver)
+                    # driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.15)))
+                    #     # html = driver.find_element(By.TAG_NAME, 'html')
+                    #     # html.send_keys(Keys.END) 
+                    # sleep(4)
+                    # rating = find_rate_shop(driver)
+                    # follow = find_follow_shop(driver)
+                    # rep_chat_text = find_rep_shop(driver)
 
                     driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.4))) 
-                    sleep(4)
-                    rating = find_rate_shop(driver)
-                    follow = find_follow_shop(driver)
-                    rep_chat_text = find_rep_shop(driver)
+                    sleep(2.5)
+                    # rating = find_rate_shop(driver)
+                    # # follow = find_follow_shop(driver)
+                    # # rep_chat_text = find_rep_shop(driver)
 
                     
                     driver.execute_script("window.scrollBy(0, {});".format(int(height * 0.6))) 
 
 
-                    sleep(4)
+                    sleep(2.5)
 
-                    number_image = find_ele(driver , "review-images__heading")
+                    # number_image = find_ele(driver , "review-images__heading")
                     rating_point = find_rating(driver, "review-rating__point")
                    
-                    data.append({"link": link, "price": price,  "rate_shop": rating, "shop_follow": follow, "rep_chat":rep_chat_text , "number_image":number_image,
+                    data.append({"link": link, "price": price, "quantity_sold":sold_number ,   
                             "rating_avarage": rating_point})
                     
             
@@ -222,7 +222,7 @@ def get_data_from_link(queue , lock , visited_links_lock , queue_lock):
                         visited_links.add(link)
         # Ghi dữ liệu vào file JSON
                     with lock:
-                        with open('data_3.json', 'a') as f:
+                        with open('datarate.json', 'a') as f:
                             json.dump(data[-1], f)
                             f.write('\n')
 
